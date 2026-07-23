@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project output examples
+# Keep example artifacts visible for understanding, but ignore generated runtime files instead.
+# Uncomment the next three lines if you want to ignore all generated captures/reports/logs.
+# captures/
+# logs/
+# reports/
