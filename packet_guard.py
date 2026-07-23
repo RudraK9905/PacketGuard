@@ -3,7 +3,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from scapy.all import IP, IPv6, ICMP, TCP, UDP, sniff, wrpcap
+from scapy.all import IP, IPv6, ICMP, TCP, UDP, Raw, sniff, wrpcap
 
 FIELDNAMES = ["timestamp", "source", "destination", "protocol", "length"]
 
@@ -67,15 +67,43 @@ class PacketGuard:
             writer.writerow(record)
         return record
 
-    def start_capture(self, interface, duration):
-        print(f"Capturing traffic on {interface} for {duration} seconds...")
-        packets = sniff(iface=interface, timeout=duration, prn=self.process_packet, store=True)
-        print(f"Capture complete: {len(packets)} packets recorded.")
+    def _build_demo_packets(self):
+        packets = []
+        demo_packet_specs = [
+            ("TCP", IP(src="192.168.1.10", dst="142.250.190.80") / TCP(sport=54321, dport=443)),
+            ("UDP", IP(src="192.168.1.5", dst="8.8.8.8") / UDP(sport=53000, dport=53)),
+            ("ICMP", IP(src="192.168.1.8", dst="192.168.1.1") / ICMP()),
+            ("UDP", IP(src="10.0.0.5", dst="255.255.255.255") / UDP(sport=40000, dport=9999) / Raw(b"X" * 700)),
+        ]
+
+        for _, packet in demo_packet_specs:
+            self.process_packet(packet)
+            packets.append(packet)
+
+        return packets
+
+    def start_capture(self, interface, duration, demo=False):
+        if demo or interface is None:
+            print("Running in demo mode with sample traffic...")
+            packets = self._build_demo_packets()
+            print(f"Demo capture complete: {len(packets)} packets recorded.")
+        else:
+            try:
+                print(f"Capturing traffic on {interface} for {duration} seconds...")
+                packets = sniff(iface=interface, timeout=duration, prn=self.process_packet, store=True)
+                print(f"Capture complete: {len(packets)} packets recorded.")
+            except PermissionError:
+                print("Live capture requires elevated permissions. Falling back to demo mode.")
+                packets = self._build_demo_packets()
+            except Exception as exc:
+                print(f"Live capture failed ({exc}). Falling back to demo mode.")
+                packets = self._build_demo_packets()
 
         if packets:
-            wrpcap(self.pcap_path, packets)
+            wrpcap(str(self.pcap_path), packets)
             print(f"Saved packet capture to: {self.pcap_path}")
 
+        self.generate_report()
         return packets
 
     def load_log(self):
@@ -124,6 +152,7 @@ def parse_arguments():
     )
     parser.add_argument("-i", "--interface", default=None, help="Network interface to capture from")
     parser.add_argument("-d", "--duration", type=int, default=10, help="Capture duration in seconds")
+    parser.add_argument("--demo", action="store_true", help="Use sample demo traffic instead of a live capture")
     parser.add_argument("--log", default="logs/traffic_log.csv", help="CSV path for packet logs")
     parser.add_argument("--pcap", default="captures/test.pcap", help="PCAP output file path")
     parser.add_argument("--report", default="reports/suspicious_report.csv", help="Suspicious activity report path")
@@ -133,12 +162,13 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    if not args.interface:
-        raise SystemExit("Error: please provide an interface with --interface or -i.")
+    if not args.interface and not args.demo:
+        raise SystemExit("Error: please provide an interface with --interface or -i, or run with --demo.")
 
     guard = PacketGuard(log_path=args.log, pcap_path=args.pcap, report_path=args.report)
-    guard.start_capture(interface=args.interface, duration=args.duration)
+    guard.start_capture(interface=args.interface, duration=args.duration, demo=args.demo)
     guard.generate_report()
+    return 0
 
 
 if __name__ == "__main__":
