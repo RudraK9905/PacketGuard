@@ -36,25 +36,31 @@ PacketGuard is a Python-based network security tool that captures and analyzes l
 
 ## Screenshots
 
-### Live Packet Capture
+### Terminal Output
 
-Shows PacketGuard capturing packets in real time.
+Displays PacketGuard running and generating the analysis report.
 
-![Live Capture](screenshots/live_capture.png)
+![Terminal](screenshots/terminal_output.png)
 
-### Threat Detection
+---
 
-PacketGuard identifies suspicious packets and flags potential threats.
+### Packet Capture
 
-![Threat Detection](screenshots/suspicious_report.png)
+Shows the captured PCAP data ready for analysis.
 
-### Generated Report
+![Wireshark](screenshots/live_capture.png)
 
-Detected threats are exported into a structured CSV report.
+---
 
-![Report](screenshots/terminal_output.png)
+### Threat Report
 
-### System Architecture
+A structured suspicious traffic report exported to CSV.
+
+![Report](screenshots/suspicious_report.png)
+
+---
+
+### Architecture
 
 Illustrates the packet processing pipeline.
 

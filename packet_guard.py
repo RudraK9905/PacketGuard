@@ -1,6 +1,6 @@
 import argparse
 import csv
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from scapy.all import IP, IPv6, ICMP, TCP, UDP, Raw, sniff, wrpcap
@@ -43,7 +43,7 @@ class PacketGuard:
             protocol_name = self._protocol_name(ip_layer.nh)
 
         return {
-            "timestamp": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
             "source": source,
             "destination": destination,
             "protocol": protocol_name,
@@ -101,9 +101,8 @@ class PacketGuard:
 
         if packets:
             wrpcap(str(self.pcap_path), packets)
-            print(f"Saved packet capture to: {self.pcap_path}")
+            print(f"✓ Packet capture saved:\n  {self.pcap_path}")
 
-        self.generate_report()
         return packets
 
     def load_log(self):
