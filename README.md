@@ -68,6 +68,14 @@ Illustrates the packet processing pipeline.
 
 ---
 
+### Traffic Log
+
+Shows the traffic log generated during monitoring.
+
+![Traffic Log](screenshots/traffic_log.png)
+
+---
+
 ## Project Structure
 
 ```text
